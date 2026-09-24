@@ -1,0 +1,8 @@
+[project]
+name = "food-safety-supervision"
+version = "0.1.0"
+description = "食品安全协同督办图领域契约"
+requires-python = ">=3.11"
+
+[tool.unittest]
+start-directory = "tests"

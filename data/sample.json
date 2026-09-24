@@ -1,0 +1,12 @@
+{
+  "event_id": "092507-005-sample-001",
+  "event_type": "CLUE_REGISTERED",
+  "aggregate_type": "regulated_subject",
+  "aggregate_id": "food_safety_supervision-001",
+  "occurred_at": "2026-09-24T12:00:00+08:00",
+  "version": 1,
+  "payload": {
+    "source_type": "sample-source_type",
+    "subject_ref": "sample-subject_ref"
+  }
+}
