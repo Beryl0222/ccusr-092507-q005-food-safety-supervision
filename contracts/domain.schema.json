@@ -14,25 +14,52 @@
   "properties": {
     "event_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "平台回调或人工签发事件的稳定标识；同标识重放必须命中同一事件。"
     },
     "event_type": {
       "type": "string",
       "enum": [
+        "NODE_REGISTERED",
+        "SUBJECT_REGISTERED",
+        "SUBJECT_PROFILE_REVISED",
+        "SUBJECT_VERIFIED",
+        "LINK_ESTABLISHED",
         "CLUE_REGISTERED",
-        "HANDOFF_ACCEPTED",
-        "SCOPE_RESTRICTED",
+        "EVIDENCE_SUBMITTED",
+        "EVIDENCE_REVIEWED",
         "EVIDENCE_CORRECTED",
-        "CASE_CLOSED"
+        "HANDOFF_CREATED",
+        "HANDOFF_ACCEPTED",
+        "HANDOFF_RETURNED",
+        "DUTY_DECLARED",
+        "SCOPE_RESTRICTED",
+        "SCOPE_RELEASED",
+        "ENFORCEMENT_OPENED",
+        "ENFORCEMENT_RESOLVED",
+        "RECTIFICATION_REQUESTED",
+        "RECTIFICATION_SUBMITTED",
+        "RECTIFICATION_PASSED",
+        "RECTIFICATION_REJECTED",
+        "CASE_CLOSED",
+        "CASE_REOPENED",
+        "OVERDUE_ESCALATED"
       ]
     },
     "aggregate_type": {
       "type": "string",
       "enum": [
         "regulated_subject",
+        "licensed_premise",
+        "platform_listing",
+        "material_batch",
+        "test_sample",
         "risk_clue",
+        "evidence_record",
+        "legal_duty",
         "agency_handoff",
-        "enforcement_action"
+        "enforcement_action",
+        "rectification"
       ]
     },
     "aggregate_id": {
@@ -41,28 +68,120 @@
     },
     "occurred_at": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "description": "事实生效时间，必须携带时区；边的生效/失效区间据此计算。"
     },
     "version": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "同一聚合内从 1 开始严格递增。"
     },
     "payload": {
       "type": "object"
     }
   },
   "payload_required_by_event": {
+    "NODE_REGISTERED": [
+      "node_type",
+      "node_ref"
+    ],
+    "SUBJECT_REGISTERED": [
+      "subject_no",
+      "name",
+      "profile_fingerprint"
+    ],
+    "SUBJECT_PROFILE_REVISED": [
+      "subject_no",
+      "profile_fingerprint",
+      "changed_fields"
+    ],
+    "SUBJECT_VERIFIED": [
+      "reviewer",
+      "result"
+    ],
+    "LINK_ESTABLISHED": [
+      "link_type",
+      "from_ref",
+      "to_ref"
+    ],
     "CLUE_REGISTERED": [
       "source_type",
       "subject_ref"
+    ],
+    "EVIDENCE_SUBMITTED": [
+      "evidence_ref",
+      "submitted_by",
+      "evidence_kind"
+    ],
+    "EVIDENCE_REVIEWED": [
+      "evidence_ref",
+      "reviewer",
+      "verdict"
+    ],
+    "EVIDENCE_CORRECTED": [
+      "corrected_ref",
+      "correction_reason",
+      "new_evidence_ref"
+    ],
+    "HANDOFF_CREATED": [
+      "from_agency",
+      "to_agency",
+      "due_at"
     ],
     "HANDOFF_ACCEPTED": [
       "agency_id",
       "due_at"
     ],
+    "HANDOFF_RETURNED": [
+      "agency_id",
+      "return_reason"
+    ],
+    "DUTY_DECLARED": [
+      "agency_id",
+      "duty_code"
+    ],
     "SCOPE_RESTRICTED": [
       "scope_type",
       "scope_ref"
+    ],
+    "SCOPE_RELEASED": [
+      "scope_type",
+      "scope_ref"
+    ],
+    "ENFORCEMENT_OPENED": [
+      "agency_id",
+      "basis_refs"
+    ],
+    "ENFORCEMENT_RESOLVED": [
+      "agency_id",
+      "resolution"
+    ],
+    "RECTIFICATION_REQUESTED": [
+      "agency_id",
+      "due_at"
+    ],
+    "RECTIFICATION_SUBMITTED": [
+      "evidence_ref",
+      "submitter"
+    ],
+    "RECTIFICATION_PASSED": [
+      "reviewer",
+      "evidence_ref"
+    ],
+    "RECTIFICATION_REJECTED": [
+      "reviewer",
+      "reject_reason"
+    ],
+    "CASE_CLOSED": [
+      "closed_by"
+    ],
+    "CASE_REOPENED": [
+      "reason"
+    ],
+    "OVERDUE_ESCALATED": [
+      "agency_id",
+      "stage",
+      "deadline"
     ]
   },
   "additionalProperties": false

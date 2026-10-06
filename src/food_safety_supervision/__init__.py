@@ -1,5 +1,31 @@
-"""食品安全协同督办图领域契约。"""
+"""食品安全协同督办后端。"""
 
-from .contracts import ContractIssue, validate_event
+from .errors import (
+    ClosureBlocked,
+    ContractViolation,
+    DuplicateConflict,
+    HandoffStateError,
+    OutOfJurisdiction,
+    ReviewerConflict,
+    SubjectQuarantined,
+    SupervisionError,
+    UnknownReference,
+    VersionConflict,
+)
+from .services import SupervisionService
+from .storage import EventStore
 
-__all__ = ["ContractIssue", "validate_event"]
+__all__ = [
+    "SupervisionService",
+    "EventStore",
+    "SupervisionError",
+    "ContractViolation",
+    "DuplicateConflict",
+    "VersionConflict",
+    "OutOfJurisdiction",
+    "ReviewerConflict",
+    "HandoffStateError",
+    "SubjectQuarantined",
+    "ClosureBlocked",
+    "UnknownReference",
+]
