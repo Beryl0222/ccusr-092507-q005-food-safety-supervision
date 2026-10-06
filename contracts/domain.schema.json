@@ -19,10 +19,27 @@
     "event_type": {
       "type": "string",
       "enum": [
+        "SUBJECT_REGISTERED",
+        "PREMISE_LINKED",
+        "LISTING_LINKED",
+        "BATCH_LINKED",
+        "SAMPLE_LINKED",
         "CLUE_REGISTERED",
+        "HANDOFF_OPENED",
         "HANDOFF_ACCEPTED",
+        "HANDOFF_REJECTED",
+        "FACT_CONFIRMED",
+        "EVIDENCE_SUBMITTED",
+        "EVIDENCE_FINALIZED",
+        "CALLBACK_RECORDED",
         "SCOPE_RESTRICTED",
-        "EVIDENCE_CORRECTED",
+        "STATUTORY_ACTION_TAKEN",
+        "TEST_CONCLUDED",
+        "TEST_CORRECTED",
+        "ACTION_REOPENED",
+        "RECTIFICATION_SUBMITTED",
+        "RECTIFICATION_REVIEWED",
+        "OVERDUE_FLAGGED",
         "CASE_CLOSED"
       ]
     },
@@ -30,9 +47,14 @@
       "type": "string",
       "enum": [
         "regulated_subject",
+        "licensed_premise",
+        "platform_listing",
+        "material_batch",
+        "test_sample",
         "risk_clue",
         "agency_handoff",
-        "enforcement_action"
+        "enforcement_action",
+        "rectification"
       ]
     },
     "aggregate_id": {
@@ -52,17 +74,139 @@
     }
   },
   "payload_required_by_event": {
+    "SUBJECT_REGISTERED": [
+      "subject_no",
+      "name"
+    ],
+    "PREMISE_LINKED": [
+      "premise_id",
+      "subject_no",
+      "address",
+      "license_no",
+      "valid_from"
+    ],
+    "LISTING_LINKED": [
+      "listing_id",
+      "platform",
+      "subject_no",
+      "url",
+      "content_fingerprint",
+      "observed_at"
+    ],
+    "BATCH_LINKED": [
+      "batch_id",
+      "description"
+    ],
+    "SAMPLE_LINKED": [
+      "sample_id",
+      "batch_id"
+    ],
     "CLUE_REGISTERED": [
       "source_type",
       "subject_ref"
+    ],
+    "HANDOFF_OPENED": [
+      "handoff_id",
+      "from_agency",
+      "to_agency",
+      "due_at",
+      "refs"
     ],
     "HANDOFF_ACCEPTED": [
       "agency_id",
       "due_at"
     ],
+    "HANDOFF_REJECTED": [
+      "agency_id",
+      "reason"
+    ],
+    "FACT_CONFIRMED": [
+      "agency_id",
+      "fact_type",
+      "refs"
+    ],
+    "EVIDENCE_SUBMITTED": [
+      "submitted_by",
+      "refs"
+    ],
+    "EVIDENCE_FINALIZED": [
+      "evidence_id",
+      "reviewer",
+      "decision"
+    ],
+    "CALLBACK_RECORDED": [
+      "platform",
+      "callback_id",
+      "subject_no",
+      "content_fingerprint",
+      "observed_at"
+    ],
     "SCOPE_RESTRICTED": [
       "scope_type",
       "scope_ref"
+    ],
+    "STATUTORY_ACTION_TAKEN": [
+      "action_type",
+      "legal_basis",
+      "refs"
+    ],
+    "TEST_CONCLUDED": [
+      "sample_id",
+      "conclusion"
+    ],
+    "TEST_CORRECTED": [
+      "sample_id",
+      "old_conclusion",
+      "new_conclusion",
+      "reason"
+    ],
+    "ACTION_REOPENED": [
+      "reason"
+    ],
+    "RECTIFICATION_SUBMITTED": [
+      "rectification_id",
+      "submitted_by"
+    ],
+    "RECTIFICATION_REVIEWED": [
+      "rectification_id",
+      "reviewer",
+      "passed"
+    ],
+    "OVERDUE_FLAGGED": [
+      "ref_type",
+      "ref_id"
+    ],
+    "CASE_CLOSED": []
+  },
+  "payload_datetime_fields_by_event": {
+    "PREMISE_LINKED": [
+      "valid_from"
+    ],
+    "LISTING_LINKED": [
+      "observed_at"
+    ],
+    "CALLBACK_RECORDED": [
+      "observed_at"
+    ],
+    "HANDOFF_OPENED": [
+      "due_at"
+    ],
+    "HANDOFF_ACCEPTED": [
+      "due_at"
+    ]
+  },
+  "payload_ref_list_fields_by_event": {
+    "HANDOFF_OPENED": [
+      "refs"
+    ],
+    "FACT_CONFIRMED": [
+      "refs"
+    ],
+    "EVIDENCE_SUBMITTED": [
+      "refs"
+    ],
+    "STATUTORY_ACTION_TAKEN": [
+      "refs"
     ]
   },
   "additionalProperties": false

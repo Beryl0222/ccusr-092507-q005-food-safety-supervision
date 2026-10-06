@@ -61,4 +61,24 @@ def validate_event(payload: Any, schema: Mapping[str, Any]) -> list[ContractIssu
             if field not in event_payload:
                 issues.append(ContractIssue(f"payload.{field}", "required", "事件载荷缺少必填字段"))
 
+        for field in schema.get("payload_datetime_fields_by_event", {}).get(event_type, []):
+            value = event_payload.get(field)
+            if isinstance(value, str) and not _timezone_is_explicit(value):
+                issues.append(
+                    ContractIssue(f"payload.{field}", "timezone_required", "时间字段必须包含时区")
+                )
+
+        for field in schema.get("payload_ref_list_fields_by_event", {}).get(event_type, []):
+            value = event_payload.get(field)
+            if field in event_payload and (
+                not isinstance(value, list)
+                or not value
+                or any(not isinstance(item, str) or not item.strip() for item in value)
+            ):
+                issues.append(
+                    ContractIssue(
+                        f"payload.{field}", "non_empty_ref_list", "引用列表必须是非空字符串数组"
+                    )
+                )
+
     return sorted(issues, key=lambda issue: (issue.field, issue.code))

@@ -1,12 +1,12 @@
 {
-  "event_id": "092507-005-sample-001",
-  "event_type": "CLUE_REGISTERED",
+  "event_id": "20260924-clue-0001",
+  "event_type": "SUBJECT_REGISTERED",
   "aggregate_type": "regulated_subject",
-  "aggregate_id": "food_safety_supervision-001",
-  "occurred_at": "2026-09-24T12:00:00+08:00",
+  "aggregate_id": "subject-USCC-91310000MA1FX0XX01",
+  "occurred_at": "2026-09-24T09:12:00+08:00",
   "version": 1,
   "payload": {
-    "source_type": "sample-source_type",
-    "subject_ref": "sample-subject_ref"
+    "subject_no": "USCC-91310000MA1FX0XX01",
+    "name": "某味餐饮管理有限公司"
   }
 }

@@ -1,13 +1,73 @@
 # 领域约定
 
-统一食品安全风险线索、部门职责与处置回执的交换方式，支持链路级督办与范围化限制。
+统一食品安全风险线索、部门职责与处置回执的交换方式，支持**链路级督办**与**范围化限制**：
+把经营主体、许可场所、平台页面、原料及流通批次、检测样本、风险线索、法定职责、
+处置动作和整改复查连成一张**带生效时间的关系图**；任一环节结案都不等于整条风险消除。
 
-聚合对象包括`regulated_subject`、`risk_clue`、`agency_handoff`、`enforcement_action`。事件类型包括`CLUE_REGISTERED`、`HANDOFF_ACCEPTED`、`SCOPE_RESTRICTED`、`EVIDENCE_CORRECTED`、`CASE_CLOSED`。所有时间都必须携带时区，版本号从 1 开始递增，校验层不会替调用方改写输入。
+所有时间必须携带时区，版本号在每个聚合内从 1 开始递增，校验层不替调用方改写输入。
+事件信封与载荷约定见 `contracts/domain.schema.json`，交换层只负责稳定报告结构、枚举、
+时间、版本和必需载荷；幂等、职责、移送、回避、隔离与闭合判定属于领域服务
+（`src/food_safety_supervision/service.py`）。
 
-## 事件载荷
+## 图节点（聚合类型）
 
-- `CLUE_REGISTERED`：还需包含 `source_type`, `subject_ref`。
-- `HANDOFF_ACCEPTED`：还需包含 `agency_id`, `due_at`。
-- `SCOPE_RESTRICTED`：还需包含 `scope_type`, `scope_ref`。
+| 类型 | 含义 | 关键关系 |
+| --- | --- | --- |
+| `regulated_subject` | 经营主体（统一社会信用代码为主号） | 不同部门编号归入同一主体号 |
+| `licensed_premise` | 许可场所（带生效区间） | 属于主体；地址/许可证变化时旧版本到期、新版本隔离 |
+| `platform_listing` | 平台页面（带内容指纹与观测时间） | 挂接主体；指纹变化时隔离重核 |
+| `material_batch` | 原料/流通批次 | 挂接主体、场所或页面 |
+| `test_sample` | 检测样本 | 属于批次；结论可更正，处置记录依赖关系 |
+| `risk_clue` | 风险线索（含举报人信息） | 汇聚上述对象；事实确认、证据、结案均挂在线索版本链上 |
+| `agency_handoff` | 跨部门移送 | 明确接收或退回（退回必须附理由） |
+| `enforcement_action` | 处置动作 | 区分紧急措施与法定程序；可被解除、追认或随证据重开 |
+| `rectification` | 整改与复查 | 复查人不得是提交人，复查逾期被问责 |
 
-同一事件标识的幂等与冲突处理属于上层业务服务职责；交换层只负责稳定报告结构、枚举、时间、版本和必需载荷问题。
+## 事件类型
+
+`SUBJECT_REGISTERED`、`PREMISE_LINKED`、`LISTING_LINKED`、`BATCH_LINKED`、
+`SAMPLE_LINKED`、`CLUE_REGISTERED`、`HANDOFF_OPENED`、`HANDOFF_ACCEPTED`、
+`HANDOFF_REJECTED`、`FACT_CONFIRMED`、`EVIDENCE_SUBMITTED`、`EVIDENCE_FINALIZED`、
+`CALLBACK_RECORDED`、`SCOPE_RESTRICTED`、`STATUTORY_ACTION_TAKEN`、`TEST_CONCLUDED`、
+`TEST_CORRECTED`、`ACTION_REOPENED`、`RECTIFICATION_SUBMITTED`、
+`RECTIFICATION_REVIEWED`、`OVERDUE_FLAGGED`、`CASE_CLOSED`。
+
+各事件的必填载荷与载荷内时间字段由 schema 的 `payload_required_by_event`、
+`payload_datetime_fields_by_event`、`payload_ref_list_fields_by_event` 三段声明。
+
+## 核心业务规则
+
+- **职责边界**：事实类型与部门一一对应（`DEFAULT_MANDATES`，可注入覆盖）。
+  市场监管确认场所地址、许可证、页面身份与整改复查；农业农村确认批次来源与运输条件；
+  检验检测出具结论；公安确认侦查线索。越权确认直接拒绝。
+- **移送闭环**：移送只有 `opened / accepted / rejected` 三态；只有接收部门能决定；
+  退回必须附理由，退回后须重新移送并被接收，链路才能继续。
+- **提交人回避**：证据终审人与整改复查人都不得是提交人本人，终审不可重复。
+- **回调幂等与指纹隔离**：同一平台 `callback_id` 重放为空操作；同主体号但内容指纹
+  变化时保留历史快照、新版本隔离待核验。许可场所同理：地址或许可证变化时旧版本
+  置失效时间，新版本隔离。
+- **紧急措施不替代法定程序**：紧急下架/封存只先阻止范围继续流通；必须有对应的
+  法定程序（可解除或追认紧急措施），且违法事实必须被生效法定处置覆盖。
+- **更正只重开真依赖**：检测结论由阳性更正为合格时，仅重开以该样本为依据、
+  且仍生效的处置；已经被法定措施解除的紧急措施不重开，不依赖该样本的页面处置
+  不受影响。
+- **整改复查**：法定处置完成后须提交整改并由职责部门复查；复查通过解除流程阻碍，
+  不自动撤销限制性法定决定（限制的解除来自新的法定决定，如 `lifts`）。
+- **期限与问责**：待接收移送与待复查整改按其原始期限扫描，逾期生成问责事件；
+  问责消解后保留历史，不重复问责。
+- **闭合判定**：`chain_status` 按固定顺序给出全部阻碍——待接收、待改派、待核验、
+  待现场检查、待检测、待法定处置、待法定追认、待重新处置、待证据终审、
+  证据不成立、待整改、待复查、整改不合格、逾期问责。存在任一阻碍不得结案。
+
+## 视图
+
+- **公开视图**：只呈现主体名称、处理进展措辞与受限商品/店铺；隐藏举报人身份、
+  联系方式、公安侦查事实与部门内部分工。公开访问不记审计。
+- **监管视图**：保留全部事实、证据、移送、样本结论演变与逾期记录；
+  **每次访问**都写入访问类审计，每个决定写决定类审计。
+
+## 持久化与恢复
+
+事件（`EventStore`）与审计（`AuditLog`）都是仅追加 JSONL，每次追加 flush+fsync；
+崩溃产生的残缺末行在重新打开时截断丢弃，之后按事件流重建全部状态，
+再重放原命令保持幂等，期限扫描与问责继续按原期限推进。
